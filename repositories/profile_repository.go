@@ -49,6 +49,11 @@ func (r *ProfileRepository) Get(ctx context.Context, filter interface{}) (models
 	return profile, nil
 }
 
+func (r *ProfileRepository) CountDocuments(ctx context.Context, filter interface{}) (int64, error) {
+	collection := r.Data.DB.Collection(profileCollection)
+	return collection.CountDocuments(ctx, filter)
+}
+
 func (r *ProfileRepository) Update(
 	ctx context.Context,
 	filter interface{},
