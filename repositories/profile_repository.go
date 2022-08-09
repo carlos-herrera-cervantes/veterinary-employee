@@ -21,7 +21,7 @@ func (r *ProfileRepository) GetAll(ctx context.Context, page, pageSize int64) ([
 
 	skip := page * pageSize
 	findOptions := options.FindOptions{Limit: &pageSize, Skip: &skip}
-	cursor, err := collection.Find(ctx, nil, &findOptions)
+	cursor, err := collection.Find(ctx, bson.D{}, &findOptions)
 
 	var profiles []models.Profile
 

@@ -35,7 +35,7 @@ func (co *ProfileController) GetAll(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	totalDocs, err := co.Repository.CountDocuments(ctx, nil)
+	totalDocs, err := co.Repository.CountDocuments(ctx, bson.D{})
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
