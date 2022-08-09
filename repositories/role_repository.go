@@ -18,7 +18,7 @@ var roleCollection = settings.InitializeMongoDB().Collections.Role
 
 func (r *RoleRepository) GetAll(ctx context.Context) ([]models.Role, error) {
 	collection := r.Data.DB.Collection(roleCollection)
-	cursor, err := collection.Find(ctx, nil)
+	cursor, err := collection.Find(ctx, bson.D{})
 
 	var roles []models.Role
 
