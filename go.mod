@@ -3,7 +3,7 @@ module veterinary-employee
 go 1.18
 
 require (
-	github.com/aws/aws-sdk-go v1.44.48
+	github.com/aws/aws-sdk-go v1.44.76
 	github.com/labstack/echo/v4 v4.7.2
 )
 
