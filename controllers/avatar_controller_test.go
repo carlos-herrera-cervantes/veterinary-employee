@@ -10,6 +10,7 @@ import (
 
 	"veterinary-employee/models"
 	"veterinary-employee/repositories/mocks"
+	mocksServices "veterinary-employee/services/mocks"
 
 	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo/v4"
@@ -90,8 +91,10 @@ func TestAvatarGetMe(t *testing.T) {
 func TestAvatarCreate(t *testing.T) {
 	mockController := gomock.NewController(t)
 	mockAvatarRepository := mocks.NewMockIAvatarRepository(mockController)
+	mockS3Service := mocksServices.NewMockIS3Service(mockController)
 	controller := AvatarController{
 		Repository: mockAvatarRepository,
+		S3Service:  mockS3Service,
 	}
 
 	t.Run("Should return error when no send file field", func(t *testing.T) {
@@ -146,6 +149,32 @@ func TestAvatarCreate(t *testing.T) {
 		assert.Error(t, response)
 	})
 
+	t.Run("Should return error when upload an image fails", func(t *testing.T) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+		_, _ = writer.CreateFormFile("image", "../assets/avatar.png")
+		writer.Close()
+
+		e := echo.New()
+		request := httptest.NewRequest(http.MethodPost, "/api/v1/employees/avatar", body)
+		recorder := httptest.NewRecorder()
+
+		request.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
+
+		c := e.NewContext(request, recorder)
+		c.Request().Header.Set("user-id", "62d24f2801ad56f85d5fd0f2")
+
+		mockS3Service.
+			EXPECT().
+			UploadFile(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return("", errors.New("dummy error")).
+			Times(1)
+
+		response := controller.Create(c)
+
+		assert.Error(t, response)
+	})
+
 	t.Run("Should return error when repository fails", func(t *testing.T) {
 		body := &bytes.Buffer{}
 		writer := multipart.NewWriter(body)
@@ -166,6 +195,11 @@ func TestAvatarCreate(t *testing.T) {
 			EXPECT().
 			Create(gomock.Any(), gomock.Any()).
 			Return(mockAvatar, errors.New("dummy error")).
+			Times(1)
+		mockS3Service.
+			EXPECT().
+			UploadFile(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return("", nil).
 			Times(1)
 
 		response := controller.Create(c)
@@ -194,6 +228,11 @@ func TestAvatarCreate(t *testing.T) {
 			Create(gomock.Any(), gomock.Any()).
 			Return(mockAvatar, nil).
 			Times(1)
+		mockS3Service.
+			EXPECT().
+			UploadFile(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return("", nil).
+			Times(1)
 
 		response := controller.Create(c)
 
@@ -205,8 +244,10 @@ func TestAvatarCreate(t *testing.T) {
 func TestAvatarUpdateMe(t *testing.T) {
 	mockController := gomock.NewController(t)
 	mockAvatarRepository := mocks.NewMockIAvatarRepository(mockController)
+	mockS3Service := mocksServices.NewMockIS3Service(mockController)
 	controller := AvatarController{
 		Repository: mockAvatarRepository,
+		S3Service:  mockS3Service,
 	}
 
 	t.Run("Should return error when no send file field", func(t *testing.T) {
@@ -261,6 +302,36 @@ func TestAvatarUpdateMe(t *testing.T) {
 		assert.Error(t, response)
 	})
 
+	t.Run("Should return error when upload an image fails", func(t *testing.T) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+		_, _ = writer.CreateFormFile("image", "../assets/avatar.png")
+		writer.Close()
+
+		e := echo.New()
+		request := httptest.NewRequest(
+			http.MethodPatch,
+			"/api/v1/employees/avatar/me",
+			bytes.NewReader(body.Bytes()),
+		)
+		recorder := httptest.NewRecorder()
+
+		request.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
+
+		c := e.NewContext(request, recorder)
+		c.Request().Header.Set("user-id", "62d24f2801ad56f85d5fd0f2")
+
+		mockS3Service.
+			EXPECT().
+			UploadFile(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return("", errors.New("dummy error")).
+			Times(1)
+
+		response := controller.Create(c)
+
+		assert.Error(t, response)
+	})
+
 	t.Run("Should return error when repository fails", func(t *testing.T) {
 		body := &bytes.Buffer{}
 		writer := multipart.NewWriter(body)
@@ -285,6 +356,11 @@ func TestAvatarUpdateMe(t *testing.T) {
 			EXPECT().
 			Update(gomock.Any(), gomock.Any(), gomock.Any()).
 			Return(mockAvatar, errors.New("dummy error")).
+			Times(1)
+		mockS3Service.
+			EXPECT().
+			UploadFile(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return("", nil).
 			Times(1)
 
 		response := controller.UpdateMe(c)
@@ -317,6 +393,11 @@ func TestAvatarUpdateMe(t *testing.T) {
 			Update(gomock.Any(), gomock.Any(), gomock.Any()).
 			Return(mockAvatar, nil).
 			Times(1)
+		mockS3Service.
+			EXPECT().
+			UploadFile(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return("", nil).
+			Times(1)
 
 		response := controller.UpdateMe(c)
 
@@ -328,8 +409,10 @@ func TestAvatarUpdateMe(t *testing.T) {
 func TestAvatarDeleteMe(t *testing.T) {
 	mockController := gomock.NewController(t)
 	mockAvatarRepository := mocks.NewMockIAvatarRepository(mockController)
+	mockS3Service := mocksServices.NewMockIS3Service(mockController)
 	controller := AvatarController{
 		Repository: mockAvatarRepository,
+		S3Service:  mockS3Service,
 	}
 
 	t.Run("Should return error when object id is not valid", func(t *testing.T) {
@@ -361,7 +444,41 @@ func TestAvatarDeleteMe(t *testing.T) {
 
 		mockAvatarRepository.
 			EXPECT().
+			Get(gomock.Any(), gomock.Any()).
+			Return(models.Avatar{}, nil).
+			Times(1)
+		mockS3Service.
+			EXPECT().
+			DeleteFile(gomock.Any()).
+			Return(nil).
+			Times(1)
+		mockAvatarRepository.
+			EXPECT().
 			Delete(gomock.Any(), gomock.Any()).
+			Return(errors.New("dummy error")).
+			Times(1)
+
+		response := controller.DeleteMe(c)
+
+		assert.Error(t, response)
+	})
+
+	t.Run("Should return error when S3 service fails", func(t *testing.T) {
+		e := echo.New()
+		request := httptest.NewRequest(http.MethodDelete, "/api/v1/employees/avatar/me", nil)
+		recorder := httptest.NewRecorder()
+
+		c := e.NewContext(request, recorder)
+		c.Request().Header.Set("user-id", "62d24f2801ad56f85d5fd0f2")
+
+		mockAvatarRepository.
+			EXPECT().
+			Get(gomock.Any(), gomock.Any()).
+			Return(models.Avatar{}, nil).
+			Times(1)
+		mockS3Service.
+			EXPECT().
+			DeleteFile(gomock.Any()).
 			Return(errors.New("dummy error")).
 			Times(1)
 
@@ -378,6 +495,16 @@ func TestAvatarDeleteMe(t *testing.T) {
 		c := e.NewContext(request, recorder)
 		c.Request().Header.Set("user-id", "62d24f2801ad56f85d5fd0f2")
 
+		mockAvatarRepository.
+			EXPECT().
+			Get(gomock.Any(), gomock.Any()).
+			Return(models.Avatar{}, nil).
+			Times(1)
+		mockS3Service.
+			EXPECT().
+			DeleteFile(gomock.Any()).
+			Return(nil).
+			Times(1)
 		mockAvatarRepository.
 			EXPECT().
 			Delete(gomock.Any(), gomock.Any()).
