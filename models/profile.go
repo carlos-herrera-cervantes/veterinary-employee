@@ -18,7 +18,7 @@ type Profile struct {
 	LastName    string             `json:"last_name" bson:"last_name"`
 	Gender      string             `json:"gender" bson:"gender" validate:"validateGenders"`
 	PhoneNumber string             `json:"phone_number" bson:"phone_number"`
-	Birthday    string             `json:"birthday" bson:"birthday"`
+	Birthday    time.Time          `json:"birthday" bson:"birthday"`
 	Roles       []string           `json:"roles" bson:"roles" validate:"validateRoles"`
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
@@ -28,7 +28,7 @@ type PartialProfile struct {
 	Name      string    `json:"name" bson:"name,omitempty"`
 	LastName  string    `json:"last_name" bson:"last_name,omitempty"`
 	Gender    string    `json:"gender" bson:"gender,omitempty"`
-	Birthday  string    `json:"birthday" bson:"birthday,omitempty"`
+	Birthday  time.Time `json:"birthday" bson:"birthday,omitempty"`
 	Roles     []string  `json:"roles" bson:"roles,omitempty"`
 	UpdatedAt time.Time `json:"updated_at" bson:"updated_at,omitempty"`
 }
