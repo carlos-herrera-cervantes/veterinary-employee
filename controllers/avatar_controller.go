@@ -41,55 +41,28 @@ func (co *AvatarController) GetMe(c echo.Context) error {
 	return c.JSON(http.StatusOK, avatar)
 }
 
-func (co *AvatarController) Create(c echo.Context) error {
-	image, err := c.FormFile("image")
-
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	if image.Size > settings.InitializeAWS().S3.MaxImageSize {
-		return echo.NewHTTPError(http.StatusBadRequest, "Image is greather than 2MB")
-	}
-
-	userId := c.Request().Header.Get("user-id")
+func (co *AvatarController) GetById(c echo.Context) error {
+	userId := c.Param("id")
 	objectId, err := primitive.ObjectIDFromHex(userId)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	src, err := image.Open()
-	defer src.Close()
+	avatar, err := co.Repository.Get(c.Request().Context(), bson.M{"employee_id": objectId})
 
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		return echo.NewHTTPError(http.StatusNotFound, err.Error())
 	}
 
-	url, err := co.S3Service.UploadFile(image.Filename, userId, src)
+	bucketName := settings.InitializeAWS().S3.BucketName
+	s3Endpoint := settings.InitializeAWS().S3.Endpoint
+	avatar.Path = fmt.Sprintf("%s/%s/%s", s3Endpoint, bucketName, avatar.Path)
 
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	avatar := models.Avatar{
-		Path:       fmt.Sprintf("%s/%s", userId, image.Filename),
-		EmployeeId: objectId,
-	}
-	_ = avatar.Validate()
-
-	_, err = co.Repository.Create(c.Request().Context(), avatar)
-
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	avatar.Path = url
-
-	return c.JSON(http.StatusCreated, avatar)
+	return c.JSON(http.StatusOK, avatar)
 }
 
-func (co *AvatarController) UpdateMe(c echo.Context) error {
+func (co *AvatarController) Upsert(c echo.Context) error {
 	image, err := c.FormFile("image")
 
 	if err != nil {
@@ -118,6 +91,31 @@ func (co *AvatarController) UpdateMe(c echo.Context) error {
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	totalAvatars, err := co.Repository.CountDocuments(
+		c.Request().Context(),
+		bson.M{"employee_id": objectId},
+	)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	if totalAvatars == 0 {
+		avatar := models.Avatar{
+			Path:       fmt.Sprintf("%s/%s", userId, image.Filename),
+			EmployeeId: objectId,
+		}
+		_ = avatar.Validate()
+
+		if _, err := co.Repository.Create(c.Request().Context(), avatar); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+
+		avatar.Path = url
+
+		return c.JSON(http.StatusCreated, avatar)
 	}
 
 	partialAvatar := map[string]interface{}{
@@ -138,30 +136,4 @@ func (co *AvatarController) UpdateMe(c echo.Context) error {
 	avatar.Path = url
 
 	return c.JSON(http.StatusOK, avatar)
-}
-
-func (co *AvatarController) DeleteMe(c echo.Context) error {
-	userId := c.Request().Header.Get("user-id")
-	objectId, err := primitive.ObjectIDFromHex(userId)
-
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-
-	ctx := c.Request().Context()
-	avatar, err := co.Repository.Get(ctx, bson.M{"employee_id": objectId})
-
-	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err.Error())
-	}
-
-	if err := co.S3Service.DeleteFile(avatar.Path); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	if err := co.Repository.Delete(ctx, bson.M{"employee_id": objectId}); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-
-	return c.JSON(http.StatusNoContent, nil)
 }

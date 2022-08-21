@@ -71,3 +71,8 @@ func (r *AvatarRepository) Delete(ctx context.Context, filter interface{}) error
 
 	return nil
 }
+
+func (r *AvatarRepository) CountDocuments(ctx context.Context, filter interface{}) (int64, error) {
+	collection := r.Data.DB.Collection(avatarCollection)
+	return collection.CountDocuments(ctx, filter)
+}

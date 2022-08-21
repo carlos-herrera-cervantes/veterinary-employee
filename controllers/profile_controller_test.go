@@ -403,3 +403,119 @@ func TestProfileUpdateMe(t *testing.T) {
 		assert.Equal(t, http.StatusOK, recorder.Code)
 	})
 }
+
+func TestProfileUpdateById(t *testing.T) {
+	mockController := gomock.NewController(t)
+	mockProfileRepository := mocks.NewMockIProfileRepository(mockController)
+	controller := ProfileController{
+		Repository: mockProfileRepository,
+	}
+
+	t.Run("Should return error when object id is not valid", func(t *testing.T) {
+		e := echo.New()
+		body := `{"last_name": "dummy name"}`
+
+		request := httptest.NewRequest(
+			http.MethodPatch,
+			"/api/v1/employees/profiles",
+			strings.NewReader(body),
+		)
+		request.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		recorder := httptest.NewRecorder()
+
+		c := e.NewContext(request, recorder)
+		c.SetParamNames("id")
+		c.SetParamValues("bad_object_id")
+
+		mockProfileRepository.
+			EXPECT().
+			Update(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(models.Profile{}, nil).
+			Times(0)
+
+		response := controller.UpdateById(c)
+
+		assert.Error(t, response)
+	})
+
+	t.Run("Should return error when binding profile", func(t *testing.T) {
+		e := echo.New()
+
+		request := httptest.NewRequest(
+			http.MethodPatch,
+			"/api/v1/employees/profiles",
+			strings.NewReader("bad body"),
+		)
+		request.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		recorder := httptest.NewRecorder()
+
+		c := e.NewContext(request, recorder)
+		c.SetParamNames("id")
+		c.SetParamValues("62d24f2801ad56f85d5fd0f2")
+
+		mockProfileRepository.
+			EXPECT().
+			Update(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(models.Profile{}, nil).
+			Times(0)
+
+		response := controller.UpdateById(c)
+
+		assert.Error(t, response)
+	})
+
+	t.Run("Should return error when repository fails", func(t *testing.T) {
+		e := echo.New()
+		body := `{"last_name": "dummy name"}`
+
+		request := httptest.NewRequest(
+			http.MethodPatch,
+			"/api/v1/employees/profiles",
+			strings.NewReader(body),
+		)
+		request.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		recorder := httptest.NewRecorder()
+
+		c := e.NewContext(request, recorder)
+		c.SetParamNames("id")
+		c.SetParamValues("62d24f2801ad56f85d5fd0f2")
+
+		mockProfileRepository.
+			EXPECT().
+			Update(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(models.Profile{}, errors.New("dummy error")).
+			Times(1)
+
+		response := controller.UpdateById(c)
+
+		assert.Error(t, response)
+	})
+
+	t.Run("Should return 200 when updating the profile", func(t *testing.T) {
+		e := echo.New()
+		body := `{"last_name": "dummy name"}`
+
+		request := httptest.NewRequest(
+			http.MethodPatch,
+			"/api/v1/employees/profiles",
+			strings.NewReader(body),
+		)
+		request.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		recorder := httptest.NewRecorder()
+
+		c := e.NewContext(request, recorder)
+		c.SetParamNames("id")
+		c.SetParamValues("62d24f2801ad56f85d5fd0f2")
+
+		mockProfileRepository.
+			EXPECT().
+			Update(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(models.Profile{}, nil).
+			Times(1)
+
+		response := controller.UpdateById(c)
+
+		assert.NoError(t, response)
+		assert.Equal(t, http.StatusOK, recorder.Code)
+	})
+}

@@ -11,4 +11,5 @@ type IAvatarRepository interface {
 	Create(ctx context.Context, avatar models.Avatar) (models.Avatar, error)
 	Update(ctx context.Context, filter interface{}, document interface{}) (models.Avatar, error)
 	Delete(ctx context.Context, filter interface{}) error
+	CountDocuments(ctx context.Context, filter interface{}) (int64, error)
 }
