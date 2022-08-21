@@ -38,7 +38,6 @@ func BootstrapAvatarRoutes(v *echo.Group) {
 	}
 
 	v.GET("/employees/avatar/me", controller.GetMe)
-	v.POST("/employees/avatar", controller.Create)
-	v.PATCH("/employees/avatar/me", controller.UpdateMe)
-	v.DELETE("/employees/avatar/me", controller.DeleteMe)
+	v.GET("/employees/avatar/:id", controller.GetById)
+	v.POST("/employees/avatar/me", controller.Upsert)
 }

@@ -108,3 +108,32 @@ func (co *ProfileController) UpdateMe(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, profile)
 }
+
+func (co *ProfileController) UpdateById(c echo.Context) error {
+	userId := c.Param("id")
+	objectId, err := primitive.ObjectIDFromHex(userId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	var partialProfile models.PartialProfile
+
+	if err := c.Bind(&partialProfile); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	_ = partialProfile.ValidatePartial()
+
+	profile, err := co.Repository.Update(
+		c.Request().Context(),
+		bson.M{"employee_id": objectId},
+		partialProfile,
+	)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, profile)
+}
