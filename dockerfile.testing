@@ -1,0 +1,16 @@
+FROM golang:1.18
+
+MAINTAINER Carlos Herrera
+
+WORKDIR /app
+
+COPY go.mod .
+COPY go.sum .
+
+RUN chmod -R 777 /app
+
+RUN go mod download
+
+COPY . .
+
+RUN go build -o main .

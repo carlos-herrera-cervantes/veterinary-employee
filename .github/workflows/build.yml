@@ -1,16 +1,16 @@
-name: Veterinary Employee
+name: Run unit and integration tests
 
 on: [push]
 
-env:
-  SERVER_PORT: 3006
-  MONGODB_HOST: mongodb://localhost:27017
-  DEFAULT_DB: veterinary-employees
-  S3_BUCKET: veterinary-user-avatars-dev
-  S3_ENDPOINT: http://localhost:4566
-  S3_ACCESS_KEY: na
-  S3_SECRET_KEY: na
-  S3_REGION: us-east-1
+# env:
+#   SERVER_PORT: 3006
+#   MONGODB_HOST: mongodb://localhost:27017
+#   DEFAULT_DB: veterinary-employees
+#   S3_BUCKET: veterinary-user-avatars-dev
+#   S3_ENDPOINT: http://localhost:4566
+#   S3_ACCESS_KEY: na
+#   S3_SECRET_KEY: na
+#   S3_REGION: us-east-1
 
 jobs:
   build:
@@ -20,13 +20,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.18
+      - name: Run integration tests
+        run: |
+          docker-compose up --abort-on-container-exit --exit-code-from test
 
-      - name: Build
-        run: go build -v ./...
+      # - name: Set up Go
+      #   uses: actions/setup-go@v2
+      #   with:
+      #     go-version: 1.18
 
-      - name: Test
-        run: go test -v ./...
+      # - name: Build
+      #   run: go build -v ./...
+
+      # - name: Test
+      #   run: go test -v ./...

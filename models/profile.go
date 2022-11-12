@@ -45,13 +45,21 @@ func validateGenderAttribute(fl validator.FieldLevel) bool {
 }
 
 func validateRoleAttribute(fl validator.FieldLevel) bool {
-	roleField := fl.Field().String()
+	roleField := fl.Field().Interface().([]string)
 	validRoles := map[string]bool{
 		role.Employee:   true,
 		role.SuperAdmin: true,
 	}
 
-	return validRoles[roleField]
+	for _, value := range roleField {
+		ok := validRoles[value]
+
+		if ok {
+			return ok
+		}
+	}
+
+	return false
 }
 
 func (p *PartialProfile) ValidatePartial() error {
