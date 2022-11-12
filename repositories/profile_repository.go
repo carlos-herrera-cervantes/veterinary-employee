@@ -43,7 +43,7 @@ func (r *ProfileRepository) Get(ctx context.Context, filter interface{}) (models
 	var profile models.Profile
 
 	if err := singleResult.Decode(&profile); err != nil {
-		return profile, nil
+		return profile, err
 	}
 
 	return profile, nil
@@ -51,7 +51,13 @@ func (r *ProfileRepository) Get(ctx context.Context, filter interface{}) (models
 
 func (r *ProfileRepository) CountDocuments(ctx context.Context, filter interface{}) (int64, error) {
 	collection := r.Data.DB.Collection(profileCollection)
-	return collection.CountDocuments(ctx, filter)
+	total, err := collection.CountDocuments(ctx, filter)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return total, nil
 }
 
 func (r *ProfileRepository) Update(
@@ -71,7 +77,7 @@ func (r *ProfileRepository) Update(
 	var profile models.Profile
 
 	if err := singleResult.Decode(&profile); err != nil {
-		return profile, nil
+		return profile, err
 	}
 
 	return profile, nil
