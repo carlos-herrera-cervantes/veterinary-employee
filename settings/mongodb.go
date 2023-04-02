@@ -15,8 +15,17 @@ type collections struct {
 	Avatar  string
 }
 
-func InitializeMongoDB() mongo {
-	return mongo{
+var singletonMongo *mongo
+
+func InitializeMongoDB() *mongo {
+	if singletonMongo != nil {
+		return singletonMongo
+	}
+
+	lock.Lock()
+	defer lock.Unlock()
+
+	singletonMongo = &mongo{
 		Host:      os.Getenv("MONGODB_HOST"),
 		DefaultDB: os.Getenv("DEFAULT_DB"),
 		Collections: collections{
@@ -26,4 +35,6 @@ func InitializeMongoDB() mongo {
 			Avatar:  "avatars",
 		},
 	}
+
+	return singletonMongo
 }

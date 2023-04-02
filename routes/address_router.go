@@ -15,7 +15,7 @@ func BootstrapAddressRoutes(v *echo.Group) {
 		},
 	}
 
-	v.GET("/employees/address/me", controller.GetMe)
-	v.POST("/employees/address", controller.Create)
-	v.PATCH("/employees/address/me", controller.UpdateMe)
+	v.GET("/address/me", controller.GetMe)
+	v.POST("/address", controller.Create)
+	v.PATCH("/address/me", controller.UpdateMe)
 }

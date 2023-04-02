@@ -37,7 +37,7 @@ func BootstrapAvatarRoutes(v *echo.Group) {
 		S3Service: &s3Service,
 	}
 
-	v.GET("/employees/avatar/me", controller.GetMe)
-	v.GET("/employees/avatar/:id", controller.GetById)
-	v.POST("/employees/avatar/me", controller.Upsert)
+	v.GET("/avatar/me", controller.GetMe)
+	v.GET("/avatar/:id", controller.GetById)
+	v.POST("/avatar/me", controller.Upsert)
 }
