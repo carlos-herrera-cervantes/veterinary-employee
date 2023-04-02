@@ -15,9 +15,9 @@ func BootstrapProfileRoutes(v *echo.Group) {
 		},
 	}
 
-	v.GET("/employees/profiles", controller.GetAll)
-	v.GET("/employees/profiles/:id", controller.GetById)
-	v.GET("/employees/profiles/me", controller.GetMe)
-	v.PATCH("/employees/profiles/me", controller.UpdateMe)
-	v.PATCH("/employees/profiles/:id", controller.UpdateById)
+	v.GET("/profiles", controller.GetAll)
+	v.GET("/profiles/:id", controller.GetById)
+	v.GET("/profiles/me", controller.GetMe)
+	v.PATCH("/profiles/me", controller.UpdateMe)
+	v.PATCH("/profiles/:id", controller.UpdateById)
 }

@@ -15,7 +15,7 @@ func BootstrapRoleRoutes(v *echo.Group) {
 		},
 	}
 
-	v.GET("/employees/roles", controller.GetAll)
-	v.POST("/employees/roles", controller.Create)
-	v.PATCH("/employees/roles/:id", controller.Update)
+	v.GET("/roles", controller.GetAll)
+	v.POST("/roles", controller.Create)
+	v.PATCH("/roles/:id", controller.Update)
 }

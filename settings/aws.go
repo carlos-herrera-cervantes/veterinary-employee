@@ -15,8 +15,17 @@ type s3 struct {
 	MaxImageSize int64
 }
 
-func InitializeAWS() aws {
-	return aws{
+var singletonAws *aws
+
+func InitializeAWS() *aws {
+	if singletonAws != nil {
+		return singletonAws
+	}
+
+	lock.Lock()
+	defer lock.Unlock()
+
+	singletonAws = &aws{
 		S3: s3{
 			BucketName:   os.Getenv("S3_BUCKET"),
 			Endpoint:     os.Getenv("S3_ENDPOINT"),
@@ -26,4 +35,6 @@ func InitializeAWS() aws {
 			MaxImageSize: 2000000,
 		},
 	}
+
+	return singletonAws
 }

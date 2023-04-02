@@ -3,16 +3,37 @@ package settings
 import (
 	"os"
 	"strconv"
+	"sync"
 )
 
 type app struct {
 	ServerPort int
+	BasePath string
 }
 
-func InitializeApp() app {
-	serverPort, _ := strconv.Atoi(os.Getenv("SERVER_PORT"))
+var singletonApp *app
+var lock = &sync.Mutex{}
 
-	return app{
-		ServerPort: serverPort,
+func InitializeApp() *app {
+	if singletonApp != nil {
+		return singletonApp
 	}
+
+	lock.Lock()
+	defer lock.Unlock()
+
+	var serverPort int
+
+	serverPort, err := strconv.Atoi(os.Getenv("SERVER_PORT"))
+
+	if err != nil {
+		serverPort = 3006
+	}
+
+	singletonApp = &app{
+		ServerPort: serverPort,
+		BasePath: "/api/veterinary-employee",
+	}
+
+	return singletonApp
 }
