@@ -123,7 +123,8 @@ func TestRoleRepositoryUpdate(t *testing.T) {
 		_, err = collection.InsertOne(ctx, newRole)
 		assert.NoError(t, err)
 
-		partialRole := models.Role{Active: false}
+		active := false
+		partialRole := models.PartialRole{Active: &active}
 		updateResult, err := roleRepository.Update(ctx, bson.M{"name": "Employee"}, partialRole)
 		assert.NoError(t, err)
 		assert.False(t, updateResult.Active)

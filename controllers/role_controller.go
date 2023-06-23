@@ -32,6 +32,10 @@ func (co *RoleController) Create(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	if err := role.Validate(); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
 	if _, err := co.Repository.Create(c.Request().Context(), role); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -40,7 +44,7 @@ func (co *RoleController) Create(c echo.Context) error {
 }
 
 func (co *RoleController) Update(c echo.Context) error {
-	var partialRole models.Role
+	var partialRole models.PartialRole
 
 	if err := c.Bind(&partialRole); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
