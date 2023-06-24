@@ -15,12 +15,20 @@ type Role struct {
 	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
-func (r *Role) ValidatePartial() error {
+type PartialRole struct {
+	Name      string    `json:"name" bson:"name,omitempty"`
+	Active    *bool     `json:"active" bson:"active,omitempty"`
+	CreatedAt time.Time `json:"created_at" bson:"created_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
+}
+
+func (r *PartialRole) ValidatePartial() error {
 	r.UpdatedAt = time.Now()
 	return nil
 }
 
 func (r *Role) Validate() error {
+	r.Id = primitive.NewObjectID()
 	r.Active = true
 	r.CreatedAt = time.Now()
 	r.UpdatedAt = time.Now()
