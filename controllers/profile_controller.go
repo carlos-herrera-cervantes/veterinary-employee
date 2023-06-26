@@ -1,12 +1,17 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net/http"
+	"sync"
 
 	"veterinary-employee/models"
 	"veterinary-employee/repositories"
+	"veterinary-employee/services"
+	"veterinary-employee/settings"
 	"veterinary-employee/types"
 
+	"github.com/kataras/golog"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,6 +19,7 @@ import (
 
 type ProfileController struct {
 	Repository repositories.IProfileRepository
+	KafkaService services.IKafkaService
 }
 
 func (co *ProfileController) GetAll(c echo.Context) error {
@@ -106,6 +112,13 @@ func (co *ProfileController) UpdateMe(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go co.emitProfileUpdateMessage(&wg, userId, partialProfile.Roles)
+
+	wg.Wait()
+
 	return c.JSON(http.StatusOK, profile)
 }
 
@@ -135,5 +148,35 @@ func (co *ProfileController) UpdateById(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go co.emitProfileUpdateMessage(&wg, userId, partialProfile.Roles)
+
+	wg.Wait()
+
 	return c.JSON(http.StatusOK, profile)
+}
+
+func (co *ProfileController) emitProfileUpdateMessage(wg *sync.WaitGroup, employeeId string, roles []string) {
+	defer wg.Done()
+
+	if roles == nil || len(roles) == 0 {
+		golog.Info("skipping profile update message - roles are empty")
+		return
+	}
+
+	message, err := json.Marshal(types.ProfileUpdateMessage{
+		EmployeeId: employeeId,
+		Roles: roles,
+	})
+
+	if err != nil {
+		golog.Error("error when marshaling profile update message: ", err.Error())
+		return
+	}
+
+	if err := co.KafkaService.SendMessage(settings.InitializeKafka().Topics.ProfileUpdate, message); err != nil {
+		golog.Error("error when sending a message for profile update", err.Error())
+	}
 }
