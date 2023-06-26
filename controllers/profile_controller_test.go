@@ -6,10 +6,12 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync"
 	"testing"
 
 	"veterinary-employee/models"
 	"veterinary-employee/repositories/mocks"
+	mockServices "veterinary-employee/services/mocks"
 
 	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo/v4"
@@ -517,5 +519,42 @@ func TestProfileUpdateById(t *testing.T) {
 
 		assert.NoError(t, response)
 		assert.Equal(t, http.StatusOK, recorder.Code)
+	})
+}
+
+func TestProfileController_emitProfileUpdateMessage(t *testing.T) {
+	mockController := gomock.NewController(t)
+	mockRepository := mocks.NewMockIProfileRepository(mockController)
+	mockKafkaService := mockServices.NewMockIKafkaService(mockController)
+
+	controller := ProfileController{
+		Repository: mockRepository,
+		KafkaService: mockKafkaService,
+	}
+
+	t.Run("Should exit when roles are empty", func(t *testing.T) {
+		mockKafkaService.EXPECT().SendMessage(gomock.Any(), gomock.Any()).Times(0)
+
+		var wg sync.WaitGroup
+		wg.Add(1)
+
+		go controller.emitProfileUpdateMessage(&wg, "dummy-profile-id", nil)
+
+		wg.Wait()
+	})
+
+	t.Run("Should log error when sending message fails", func(t *testing.T) {
+		mockKafkaService.
+			EXPECT().
+			SendMessage(gomock.Any(), gomock.Any()).
+			Return(errors.New("dummy error")).
+			Times(1)
+
+		var wg sync.WaitGroup
+		wg.Add(1)
+
+		go controller.emitProfileUpdateMessage(&wg, "dummy-profile-id", []string{"Admin"})
+
+		wg.Wait()
 	})
 }
