@@ -9,10 +9,11 @@ type mongo struct {
 }
 
 type collections struct {
-	Profile string
-	Role    string
-	Address string
-	Avatar  string
+	Profile          string
+	Role             string
+	Address          string
+	Avatar           string
+	CatalogPositions string
 }
 
 var singletonMongo *mongo
@@ -29,10 +30,11 @@ func InitializeMongoDB() *mongo {
 		Host:      os.Getenv("MONGODB_HOST"),
 		DefaultDB: os.Getenv("DEFAULT_DB"),
 		Collections: collections{
-			Profile: "profiles",
-			Role:    "roles",
-			Address: "addresses",
-			Avatar:  "avatars",
+			Profile:          "profiles",
+			Role:             "roles",
+			Address:          "addresses",
+			Avatar:           "avatars",
+			CatalogPositions: "catalog_positions",
 		},
 	}
 
