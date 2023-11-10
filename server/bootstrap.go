@@ -17,6 +17,7 @@ func BootstrapServer() {
 	routes.BootstrapRoleRoutes(v1)
 	routes.BootstrapAddressRoutes(v1)
 	routes.BootstrapAvatarRoutes(v1)
+	routes.BootstrapCatalogPositionsRoutes(v1)
 
 	if err := e.Start(fmt.Sprintf(":%d", settings.InitializeApp().ServerPort)); err != nil {
 		panic(err.Error())
